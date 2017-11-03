@@ -19,24 +19,36 @@ import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.Inflater;
 
 public class MainActivity extends AppCompatActivity {
     private List<Person> list;
+    private Button addHandle;
     private ListView listView;
-    int swipe = 0;
     private GestureDetector gestureDetector;
-    private ArrayAdapter adapter;
+    private PersonAdapter adapter;
 
+    private void editPerson(int index, Person person){
+        list.set(index, person);
+        adapter.notifyDataSetChanged();
+    }
+
+    private void refresh(){
+        Log.d("poy", "refresh");
+        adapter.notifyDataSetChanged();
+    }
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
         list = new ArrayList<>();
         list.add(new Person("Phornrawin", "Chitsoonthorn", "Poy"));
         listView = (ListView) findViewById(R.id.listView);
-        adapter = new PersonAdapter(this,0,list);
+        adapter = new PersonAdapter(this, R.layout.item_row, list);
         listView.setAdapter(adapter);
+
         gestureDetector = new GestureDetector(this, new MyGestureDetector());
         listView.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -47,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
 
-        Button addHandle = (Button) findViewById(R.id.btn_record);
+        addHandle = (Button) findViewById(R.id.btn_record);
         final View alertView = getLayoutInflater().inflate(R.layout.alert_layout, null);
         addHandle.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -61,15 +73,10 @@ public class MainActivity extends AppCompatActivity {
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 EditText addNickName = (EditText) alertView.findViewById(R.id.addNickName);
                                 EditText addFirstName = (EditText) alertView.findViewById(R.id.addFirstName);
-                                EditText addLastName = (EditText) alertView.findViewById(R.id.addFirstName);
-                                Log.d("onClick submit", addNickName.toString());
-                                Log.d("onClick submit", addFirstName.toString());
-                                Log.d("onClick submit", addLastName.toString());
-
-                                Log.d("onClick submit", addNickName.getText().toString());
-                                Log.d("onClick submit", addFirstName.getText().toString());
-                                Log.d("onClick submit", addLastName.getText().toString());
-                                list.add(new Person(addNickName.getText().toString(), addFirstName.getText().toString() , addLastName.getText().toString()));
+                                EditText addLastName = (EditText) alertView.findViewById(R.id.addLastName);
+                                list.add(new Person(addFirstName.getText().toString(), addLastName.getText().toString(), addNickName.getText().toString()));
+                                adapter.notifyDataSetChanged();
+                                refresh();
                             }
                         })
                         .create()
@@ -122,28 +129,30 @@ public class MainActivity extends AppCompatActivity {
         }
         @Override
         public void onLongPress(MotionEvent motionEvent) {
-            Log.d("My App", "Long press");
-            final int y = (int) motionEvent.getY();
+            int y = (int) motionEvent.getY();
             final int index = listView.pointToPosition(0, y);
             Person person = list.get(index);
-
-            final View personDialog = getLayoutInflater().inflate(R.layout.alert_layout, null);
-            ((TextView) personDialog.findViewById(R.id.addFirstName)).setText(person.getFirstname());
-            ((TextView) personDialog.findViewById(R.id.addLastName)).setText(person.getLastname());
-            ((TextView) personDialog.findViewById(R.id.addNickName)).setText(person.getNickname());
+            final View dialogView = getLayoutInflater().inflate(R.layout.alert_layout, null);
+            ((EditText) dialogView.findViewById(R.id.addNickName)).setText(person.getNickname());
+            ((EditText) dialogView.findViewById(R.id.addFirstName)).setText(person.getFirstname());
+            ((EditText) dialogView.findViewById(R.id.addLastName)).setText(person.getLastname());
 
             new AlertDialog.Builder(MainActivity.this)
-                    .setView(personDialog)
-                    .setPositiveButton("Add", new DialogInterface.OnClickListener() {
+                    .setView(dialogView)
+                    .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
                         @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            String nickname = ((EditText) personDialog.findViewById(R.id.addNickName)).getText().toString();
-                            String firstname = ((EditText) personDialog.findViewById(R.id.addFirstName)).getText().toString();
-                            String lastname = ((EditText) personDialog.findViewById(R.id.addFirstName)).getText().toString();
+                        public void onClick(DialogInterface dialog, int which) {
+                            String nickname = ((EditText) dialogView.findViewById(R.id.addNickName)).getText().toString();
+                            String firstname = ((EditText) dialogView.findViewById(R.id.addFirstName)).getText().toString();
+                            String lastname = ((EditText) dialogView.findViewById(R.id.addLastName)).getText().toString();
 
-                            Person person = new Person(nickname, firstname, lastname);
-                            list.set(index, person);
+                            Person person = new Person(firstname, lastname, nickname);
+                            list.remove(index);
+                            list.add(index, person);
+//                            list.get(index).setFirstname(firstname);
                             adapter.notifyDataSetChanged();
+                            refresh();
+                            Log.d("poy", "item in adapter " + adapter.getItem(index));
                         }
                     })
                     .create()

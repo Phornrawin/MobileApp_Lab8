@@ -4,6 +4,7 @@ import android.content.Context;
 import android.support.annotation.LayoutRes;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,17 +27,20 @@ public class PersonAdapter extends ArrayAdapter<Person> {
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         if(convertView == null){
             convertView = LayoutInflater.from(getContext()).inflate(R.layout.item_row, null);
-
-            Person p = getItem(position);
-            TextView textViewName = (TextView) convertView.findViewById(R.id.tv_name);
-            textViewName.setText(p.getFirstname());
-            TextView textViewLastName = (TextView) convertView.findViewById(R.id.tv_lastname);
-            textViewLastName.setText(p.getLastname());
-            TextView textViewNickname = (TextView) convertView.findViewById(R.id.tv_nickname);
-            textViewNickname.setText(p.getNickname());
-
         }
+        Person p = getItem(position);
+        TextView textViewName = (TextView) convertView.findViewById(R.id.tv_name);
+        textViewName.setText(p.getFirstname());
+        TextView textViewLastName = (TextView) convertView.findViewById(R.id.tv_lastname);
+        textViewLastName.setText(p.getLastname());
+        TextView textViewNickname = (TextView) convertView.findViewById(R.id.tv_nickname);
+        textViewNickname.setText(p.getNickname());
         return convertView;
     }
 
+    @Override
+    public void notifyDataSetChanged() {
+        super.notifyDataSetChanged();
+        Log.d("poy", "notify data change");
+    }
 }
