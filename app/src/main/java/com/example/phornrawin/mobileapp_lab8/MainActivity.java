@@ -20,11 +20,11 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements View.OnTouchListener{
+public class MainActivity extends AppCompatActivity {
     private List<Person> list;
+    private ListView listView;
     int swipe = 0;
     private GestureDetector gestureDetector;
-    private View.OnTouchListener gestureListener;
     private ArrayAdapter adapter;
 
     @Override
@@ -33,6 +33,19 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         setContentView(R.layout.activity_main);
 
         list = new ArrayList<>();
+        list.add(new Person("Phornrawin", "Chitsoonthorn", "Poy"));
+        listView = (ListView) findViewById(R.id.listView);
+        adapter = new PersonAdapter(this,0,list);
+        listView.setAdapter(adapter);
+        gestureDetector = new GestureDetector(this, new MyGestureDetector());
+        listView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                gestureDetector.onTouchEvent(event);
+                return false;
+            }
+        });
+
 
         Button addHandle = (Button) findViewById(R.id.btn_record);
         final View alertView = getLayoutInflater().inflate(R.layout.alert_layout, null);
@@ -64,46 +77,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             }
         });
 
-        class MyGestureDetector extends GestureDetector.SimpleOnGestureListener {
-            @Override
-            public boolean onDoubleTap(MotionEvent e) {
-
-                Toast.makeText(getApplicationContext(), "You double tapped", Toast.LENGTH_SHORT).show();
-
-                return true;
-            }
-
-            @Override
-            public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX,
-                                   float velocityY) {
-
-                if (e1.getX() - e2.getX() > 50
-                        && Math.abs(velocityX) > 50) {
-                    swipe = -1;
-
-                }
-
-                else if (e2.getX() - e1.getX() > 50
-                        && Math.abs(velocityX) > 50) {
-                    swipe = 1;
-                }
-
-                return true;
-            }
-        }
-
-        gestureDetector = new GestureDetector(this, new MyGestureDetector());
-        gestureListener = new View.OnTouchListener() {
-            public boolean onTouch(View v, MotionEvent event) {
-                return gestureDetector.onTouchEvent(event);
-            }
-        };
-
-        ListView listView = (ListView) findViewById(R.id.listView);
-        adapter = new PersonAdapter(this,0,list);
-        listView.setAdapter( adapter);
-        listView.setOnTouchListener(gestureListener);
-
 
     }
     @Override
@@ -114,24 +87,68 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             return false;
     }
 
-    @Override
-    public boolean onTouch(View v, MotionEvent event) {
-        if(gestureDetector.onTouchEvent(event)) {
+    class MyGestureDetector extends GestureDetector.SimpleOnGestureListener {
+        @Override
+        public boolean onDoubleTap(MotionEvent e) {
 
-            if(swipe == 1) {
+            Toast.makeText(getApplicationContext(), "You double tapped", Toast.LENGTH_SHORT).show();
 
-                Toast.makeText(this, "left-to-right", Toast.LENGTH_SHORT).show();
-
-
-                adapter.remove(((TextView)v).getText().toString());
-
-                adapter.notifyDataSetChanged();
-
-
-            }
+            return true;
         }
 
-        swipe = 0;
-        return false;
+        @Override
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+            Log.d("My App", "Fling");
+            final int y = (int) e1.getY();
+            new AlertDialog.Builder(MainActivity.this)
+                    .setMessage("Are you sure to delete?")
+                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+
+                        }
+                    })
+                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            int index = listView.pointToPosition(0, y);
+                            list.remove(index);
+                            adapter.notifyDataSetChanged();
+                        }
+                    })
+                    .create()
+                    .show();
+            return false;
+        }
+        @Override
+        public void onLongPress(MotionEvent motionEvent) {
+            Log.d("My App", "Long press");
+            final int y = (int) motionEvent.getY();
+            final int index = listView.pointToPosition(0, y);
+            Person person = list.get(index);
+
+            final View personDialog = getLayoutInflater().inflate(R.layout.alert_layout, null);
+            ((TextView) personDialog.findViewById(R.id.addFirstName)).setText(person.getFirstname());
+            ((TextView) personDialog.findViewById(R.id.addLastName)).setText(person.getLastname());
+            ((TextView) personDialog.findViewById(R.id.addNickName)).setText(person.getNickname());
+
+            new AlertDialog.Builder(MainActivity.this)
+                    .setView(personDialog)
+                    .setPositiveButton("Add", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            String nickname = ((EditText) personDialog.findViewById(R.id.addNickName)).getText().toString();
+                            String firstname = ((EditText) personDialog.findViewById(R.id.addFirstName)).getText().toString();
+                            String lastname = ((EditText) personDialog.findViewById(R.id.addFirstName)).getText().toString();
+
+                            Person person = new Person(nickname, firstname, lastname);
+                            list.set(index, person);
+                            adapter.notifyDataSetChanged();
+                        }
+                    })
+                    .create()
+                    .show();
+        }
     }
+
 }
