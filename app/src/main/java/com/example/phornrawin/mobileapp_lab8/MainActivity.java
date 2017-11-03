@@ -60,10 +60,12 @@ public class MainActivity extends AppCompatActivity {
 
 
         addHandle = (Button) findViewById(R.id.btn_record);
-        final View alertView = getLayoutInflater().inflate(R.layout.alert_layout, null);
+
         addHandle.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View view) {
+                final View alertView = getLayoutInflater().inflate(R.layout.alert_layout, null);
                 new AlertDialog.Builder(MainActivity.this)
                         .setView(alertView)
                         .setTitle("Insert Your Info")
@@ -75,8 +77,8 @@ public class MainActivity extends AppCompatActivity {
                                 EditText addFirstName = (EditText) alertView.findViewById(R.id.addFirstName);
                                 EditText addLastName = (EditText) alertView.findViewById(R.id.addLastName);
                                 list.add(new Person(addFirstName.getText().toString(), addLastName.getText().toString(), addNickName.getText().toString()));
-                                adapter.notifyDataSetChanged();
-                                refresh();
+//                                adapter.notifyDataSetChanged();
+//                                refresh();
                             }
                         })
                         .create()
